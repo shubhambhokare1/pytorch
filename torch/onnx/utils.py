@@ -351,6 +351,20 @@ def _trace_and_get_graph_from_model(model, args):
 
 def _create_jit_graph(model, args, _retain_param_name, use_new_jit_passes):
     torch_out = None
+
+    import inspect
+    sig = inspect.signature(model.forward)
+    ordered_list_keys = list(sig.parameters.keys())
+
+    if isinstance(args[-1], dict):
+        args_dict = args[-1]
+        args = list(args)[:-1]
+        for optional_arg in ordered_list_keys:
+            if optional_arg in args_dict:
+                args.append(args_dict[optional_arg])
+        args = tuple(args)
+        print(args)
+
     if isinstance(model, torch.jit.ScriptModule):
         try:
             graph = model.forward.graph
